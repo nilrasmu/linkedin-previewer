@@ -48,8 +48,8 @@ export default function LinkedInPreviewer() {
     return '';
   });
   const [customProfilePhoto, setCustomProfilePhoto] = useState(() => {
-    if (typeof document !== 'undefined') {
-      return document.cookie.split('; ').find(row => row.startsWith('li_profile_photo='))?.split('=')[1] || '';
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem('li_profile_photo') || '';
     }
     return '';
   });
@@ -106,8 +106,12 @@ What's been your experience with post length?`;
       document.cookie = `li_author_name=${authorName}; max-age=31536000; path=/`;
       document.cookie = `li_author_headline=${authorHeadline}; max-age=31536000; path=/`;
       document.cookie = `li_use_profile=${useProfile}; max-age=31536000; path=/`;
+    }
+    if (typeof window !== 'undefined' && window.localStorage) {
       if (customProfilePhoto) {
-        document.cookie = `li_profile_photo=${encodeURIComponent(customProfilePhoto)}; max-age=31536000; path=/`;
+        localStorage.setItem('li_profile_photo', customProfilePhoto);
+      } else {
+        localStorage.removeItem('li_profile_photo');
       }
     }
   }, [authorName, authorHeadline, useProfile, customProfilePhoto]);
