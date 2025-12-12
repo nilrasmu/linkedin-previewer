@@ -266,17 +266,47 @@ What's been your experience with post length?`;
     setDocumentTitle('');
   };
 
-  const nextPage = () => {
-    if (currentPage < documentPages.length - 1) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
+const nextPage = (e) => {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  
+  // Save scroll position before state change
+  const scrollPos = previewCardRef.current?.scrollTop || 0;
+  
+  if (currentPage < documentPages.length - 1) {
+    setCurrentPage(currentPage + 1);
+    
+    // Restore scroll position immediately after React updates
+    requestAnimationFrame(() => {
+      if (previewCardRef.current) {
+        previewCardRef.current.scrollTop = scrollPos;
+      }
+    });
+  }
+};
 
-  const prevPage = () => {
-    if (currentPage > 0) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
+const prevPage = (e) => {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  
+  // Save scroll position before state change
+  const scrollPos = previewCardRef.current?.scrollTop || 0;
+  
+  if (currentPage > 0) {
+    setCurrentPage(currentPage - 1);
+    
+    // Restore scroll position immediately after React updates
+    requestAnimationFrame(() => {
+      if (previewCardRef.current) {
+        previewCardRef.current.scrollTop = scrollPos;
+      }
+    });
+  }
+};
 
   const loadSamplePost = () => {
     setPostText(SAMPLE_POST);
@@ -321,45 +351,105 @@ What's been your experience with post length?`;
   };
 
   const autoSpaceText = (text) => {
-    if (!text) return text;
+  if (!text) return text;
+  
+  // First, split by newlines and trim
+  let lines = text.split('\n').map(line => line.trim());
+  
+  // Remove empty lines initially
+  lines = lines.filter(line => line.length > 0);
+  
+  // Step 1: Split mashed-together list items (→, •, ↳ only, not -)
+  const processedLines = [];
+  
+  for (let line of lines) {
+    // Check if line has multiple list symbols mashed together
+    const arrowCount = (line.match(/→/g) || []).length;
+    const bulletCount = (line.match(/•/g) || []).length;
+    const hookArrowCount = (line.match(/↳/g) || []).length;
     
-    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-    const result = [];
-    
-    for (let i = 0; i < lines.length; i++) {
-      const currentLine = lines[i];
-      const nextLine = lines[i + 1];
+    if (arrowCount > 1 || bulletCount > 1 || hookArrowCount > 1) {
+      // Split by list symbols while keeping the symbol with the text
+      const parts = line.split(/(→|•|↳)/).filter(part => part.trim());
       
-      // Check if current line is a list item (starts with bullet, hyphen, arrow, or number)
-      const isListItem = /^[-•→►▸∙⋅·‣⁃◦▪▫⦿⦾]/.test(currentLine) || /^\d+\./.test(currentLine);
-      
-      // Check if current line introduces a list (ends with colon or is numbered)
-      const introducesList = currentLine.endsWith(':') || /^\d+\./.test(currentLine);
-      
-      // Check if next line is a list item
-      const nextIsListItem = nextLine && (/^[-•→►▸∙⋅·‣⁃◦▪▫⦿⦾]/.test(nextLine) || /^\d+\./.test(nextLine));
-      
-      result.push(currentLine);
-      
-      // Add blank line UNLESS:
-      // 1. Current line is a list item and next is also a list item
-      // 2. Current line introduces a list and next line is a list item
-      if (i < lines.length - 1) {
-        if (isListItem && nextIsListItem) {
-          // Keep list items together
-          continue;
-        } else if (introducesList && nextIsListItem) {
-          // Keep introduction with list
-          continue;
+      let currentItem = '';
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i].trim();
+        
+        if (part === '→' || part === '•' || part === '↳') {
+          // Push previous item if exists
+          if (currentItem.trim()) {
+            processedLines.push(currentItem.trim());
+          }
+          // Start new item
+          currentItem = part;
         } else {
-          // Add blank line for spacing
-          result.push('');
+          // Add text to current item
+          if (currentItem && !currentItem.endsWith(' ')) {
+            currentItem += ' ';
+          }
+          currentItem += part;
         }
       }
+      // Push last item
+      if (currentItem.trim()) {
+        processedLines.push(currentItem.trim());
+      }
+    } else {
+      processedLines.push(line);
     }
+  }
+  
+  // Step 2: Apply spacing rules
+  const result = [];
+  
+  for (let i = 0; i < processedLines.length; i++) {
+    const currentLine = processedLines[i];
+    const nextLine = processedLines[i + 1];
+    const prevLine = processedLines[i - 1];
     
-    return result.join('\n');
-  };
+    // Check if line is a section header (starts with emoji number)
+    const isSectionHeader = /^[0-9]️⃣/.test(currentLine);
+    const nextIsSectionHeader = nextLine && /^[0-9]️⃣/.test(nextLine);
+    const prevWasSectionHeader = prevLine && /^[0-9]️⃣/.test(prevLine);
+    
+    // Check if line is a list item (starts with →, •, or ↳)
+    const isListItem = /^[→•↳]/.test(currentLine);
+    const nextIsListItem = nextLine && /^[→•↳]/.test(nextLine);
+    const prevWasListItem = prevLine && /^[→•↳]/.test(prevLine);
+    
+    // Check if in hook (first 2 lines)
+    const isInHook = i < 2;
+    
+    // Add current line
+    result.push(currentLine);
+    
+    // Decide if we need a blank line after this line
+    if (i < processedLines.length - 1) {
+      if (isInHook) {
+        // No blank line in hook
+        continue;
+      } else if (isSectionHeader) {
+        // Blank line after section header
+        result.push('');
+      } else if (nextIsSectionHeader) {
+        // Blank line before section header
+        result.push('');
+      } else if (isListItem && nextIsListItem) {
+        // Keep list items together
+        continue;
+      } else if (isListItem && !nextIsListItem) {
+        // Blank line after list ends
+        result.push('');
+      } else if (!isListItem && !nextIsListItem && !prevWasSectionHeader) {
+        // Blank line between regular paragraphs (but not right after section header)
+        result.push('');
+      }
+    }
+  }
+  
+  return result.join('\n');
+};
 
   const applyAutoSpacing = () => {
     const spacedText = autoSpaceText(postText);
@@ -503,27 +593,31 @@ What's been your experience with post length?`;
           </div>
           
           {/* Navigation arrows */}
-          {currentPage > 0 && (
-            <button
-              onClick={prevPage}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-gray-100 transition-colors z-10 border border-gray-200"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-              </svg>
-            </button>
-          )}
-          
-          {currentPage < documentPages.length - 1 && (
-            <button
-              onClick={nextPage}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-gray-100 transition-colors z-10 border border-gray-200"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
-              </svg>
-            </button>
-          )}
+{currentPage > 0 && (
+  <button
+    type="button"
+    onClick={prevPage}
+    onMouseDown={(e) => e.preventDefault()}
+    className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-gray-100 transition-colors z-10 border border-gray-200"
+  >
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+    </svg>
+  </button>
+)}
+
+{currentPage < documentPages.length - 1 && (
+  <button
+    type="button"
+    onClick={nextPage}
+    onMouseDown={(e) => e.preventDefault()}
+    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-gray-100 transition-colors z-10 border border-gray-200"
+  >
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/>
+    </svg>
+  </button>
+)}
 
           {/* Page counter */}
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/70 text-white text-xs rounded-full">
@@ -639,7 +733,7 @@ What's been your experience with post length?`;
   };
 
   const LinkedInPost = () => (
-    <div ref={previewCardRef} className={`border rounded-lg overflow-hidden shadow-sm max-h-[800px] overflow-y-auto ${
+    <div ref={previewCardRef} className={`border rounded-lg overflow-y-auto shadow-sm max-h-[800px] ${
       darkMode 
         ? 'bg-[#1b1f23] border-[#38434f]' 
         : 'bg-white border-gray-200'
@@ -843,49 +937,76 @@ What's been your experience with post length?`;
                 </div>
               )}
 
-              {useProfile && (
-                <div>
-                  <label className={`block text-xs font-medium mb-2 ${
-                    darkMode ? 'text-[#b4b2ab]' : 'text-gray-700'
-                  }`}>
-                    Profile Photo
-                  </label>
-                  
-                  {customProfilePhoto && (
-                    <div className="mb-3 flex items-center gap-3">
-                      <img src={customProfilePhoto} alt="Profile" className={`w-16 h-16 rounded-full object-cover border-2 ${
-                        darkMode ? 'border-[#545d69]' : 'border-gray-200'
-                      }`} />
-                      <button
-                        onClick={() => setCustomProfilePhoto('')}
-                        className="text-xs text-red-600 hover:text-red-700 font-medium"
-                      >
-                        Remove Photo
-                      </button>
-                    </div>
-                  )}
-
-                  <input
-                    ref={profilePhotoInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleProfilePhotoUpload}
-                    className="hidden"
-                  />
-                  
-                  <button
-                    onClick={() => profilePhotoInputRef.current?.click()}
-                    className={`w-full px-4 py-2.5 border-2 border-dashed rounded-lg text-sm transition-colors flex items-center justify-center gap-2 ${
-                      darkMode
-                        ? 'border-[#545d69] text-[#b4b2ab] hover:border-blue-500 hover:text-blue-400'
-                        : 'border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600'
-                    }`}
-                  >
-                    <Upload size={16} />
-                    {customProfilePhoto ? 'Change Profile Photo' : 'Upload Profile Photo'}
-                  </button>
-                </div>
-              )}
+             {useProfile && (
+  <div>
+    <label className={`block text-xs font-medium mb-3 ${
+      darkMode ? 'text-[#b4b2ab]' : 'text-gray-700'
+    }`}>
+      Profile Photo
+    </label>
+    
+    <input
+      ref={profilePhotoInputRef}
+      type="file"
+      accept="image/*"
+      onChange={handleProfilePhotoUpload}
+      className="hidden"
+    />
+    
+    <div className={`flex items-center gap-4 p-4 rounded-lg border ${
+      darkMode ? 'bg-[#38434f] border-[#545d69]' : 'bg-gray-50 border-gray-200'
+    }`}>
+      {customProfilePhoto ? (
+        <>
+          <img 
+            src={customProfilePhoto} 
+            alt="Profile" 
+            className={`w-20 h-20 rounded-full object-cover border-2 flex-shrink-0 ${
+              darkMode ? 'border-[#545d69]' : 'border-gray-300'
+            }`} 
+          />
+          <div className="flex-1 flex flex-col gap-2">
+            <button
+              onClick={() => profilePhotoInputRef.current?.click()}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                darkMode
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              Change Photo
+            </button>
+            <button
+              onClick={() => setCustomProfilePhoto('')}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                darkMode
+                  ? 'bg-red-600/10 text-red-400 hover:bg-red-600/20'
+                  : 'bg-red-50 text-red-600 hover:bg-red-100'
+              }`}
+            >
+              Remove Photo
+            </button>
+          </div>
+        </>
+      ) : (
+        <button
+          onClick={() => profilePhotoInputRef.current?.click()}
+          className={`w-full px-4 py-8 border-2 border-dashed rounded-lg text-sm transition-colors flex flex-col items-center justify-center gap-2 ${
+            darkMode
+              ? 'border-[#545d69] text-[#b4b2ab] hover:border-blue-500 hover:text-blue-400 hover:bg-[#1b1f23]'
+              : 'border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600 hover:bg-white'
+          }`}
+        >
+          <Upload size={24} />
+          <span className="font-medium">Upload Profile Photo</span>
+          <span className={`text-xs ${darkMode ? 'text-[#7a7a7a]' : 'text-gray-500'}`}>
+            Click to select an image
+          </span>
+        </button>
+      )}
+    </div>
+  </div>
+)}
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
@@ -1014,37 +1135,7 @@ What's been your experience with post length?`;
                 />
 
                 {/* Media preview/management */}
-                {mediaType === 'image' && uploadedImages.length > 0 && (
-                  <div>
-                    <div className="grid grid-cols-4 gap-2 mb-2">
-                      {uploadedImages.map((img, idx) => (
-                        <div key={idx} className="relative group">
-                          <img src={img} alt={`Upload ${idx}`} className={`w-full h-20 object-cover rounded border ${
-                            darkMode ? 'border-[#545d69]' : 'border-gray-200'
-                          }`} />
-                          <button
-                            onClick={() => removeImage(idx)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X size={12} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    {uploadedImages.length < 4 && (
-                      <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className={`w-full px-3 py-2 text-xs rounded-lg border transition-colors ${
-                          darkMode
-                            ? 'border-[#545d69] text-[#b4b2ab] hover:border-blue-500'
-                            : 'border-gray-300 text-gray-600 hover:border-blue-500'
-                        }`}
-                      >
-                        + Add more images
-                      </button>
-                    )}
-                  </div>
-                )}
+                
 
                 {mediaType === 'document' && uploadedDocument && (
                   <div className={`p-3 rounded-lg border ${
@@ -1139,41 +1230,55 @@ What's been your experience with post length?`;
                   {downloading ? 'Downloading...' : 'Download'}
                 </button>
                 
-                <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
-                  <button
-                    onClick={() => { setViewMode('mobile'); setShowFullText(false); setHasExpandedOnce(false); }}
-                    className={`p-2 rounded-md transition-all ${
-                      viewMode === 'mobile' 
-                        ? 'bg-white text-blue-600 shadow-sm' 
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                    title="Mobile"
-                  >
-                    <Smartphone size={18} />
-                  </button>
-                  <button
-                    onClick={() => { setViewMode('ipad'); setShowFullText(false); setHasExpandedOnce(false); }}
-                    className={`p-2 rounded-md transition-all ${
-                      viewMode === 'ipad' 
-                        ? 'bg-white text-blue-600 shadow-sm' 
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                    title="iPad"
-                  >
-                    <Tablet size={18} />
-                  </button>
-                  <button
-                    onClick={() => { setViewMode('desktop'); setShowFullText(false); setHasExpandedOnce(false); }}
-                    className={`p-2 rounded-md transition-all ${
-                      viewMode === 'desktop' 
-                        ? 'bg-white text-blue-600 shadow-sm' 
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                    title="Desktop"
-                  >
-                    <Monitor size={18} />
-                  </button>
-                </div>
+                <div className={`flex gap-1 p-1 rounded-lg ${
+  darkMode ? 'bg-[#38434f]' : 'bg-gray-100'
+}`}>
+  <button
+    onClick={() => { setViewMode('mobile'); setShowFullText(false); setHasExpandedOnce(false); }}
+    className={`p-2 rounded-md transition-all ${
+      viewMode === 'mobile' 
+        ? darkMode 
+          ? 'bg-blue-600 text-white shadow-sm' 
+          : 'bg-white text-blue-600 shadow-sm'
+        : darkMode
+          ? 'text-[#b4b2ab] hover:text-[#e8e6e3]'
+          : 'text-gray-500 hover:text-gray-700'
+    }`}
+    title="Mobile"
+  >
+    <Smartphone size={18} />
+  </button>
+  <button
+    onClick={() => { setViewMode('ipad'); setShowFullText(false); setHasExpandedOnce(false); }}
+    className={`p-2 rounded-md transition-all ${
+      viewMode === 'ipad' 
+        ? darkMode 
+          ? 'bg-blue-600 text-white shadow-sm' 
+          : 'bg-white text-blue-600 shadow-sm'
+        : darkMode
+          ? 'text-[#b4b2ab] hover:text-[#e8e6e3]'
+          : 'text-gray-500 hover:text-gray-700'
+    }`}
+    title="iPad"
+  >
+    <Tablet size={18} />
+  </button>
+  <button
+    onClick={() => { setViewMode('desktop'); setShowFullText(false); setHasExpandedOnce(false); }}
+    className={`p-2 rounded-md transition-all ${
+      viewMode === 'desktop' 
+        ? darkMode 
+          ? 'bg-blue-600 text-white shadow-sm' 
+          : 'bg-white text-blue-600 shadow-sm'
+        : darkMode
+          ? 'text-[#b4b2ab] hover:text-[#e8e6e3]'
+          : 'text-gray-500 hover:text-gray-700'
+    }`}
+    title="Desktop"
+  >
+    <Monitor size={18} />
+  </button>
+</div>
               </div>
             </div>
 
