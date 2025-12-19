@@ -328,8 +328,10 @@ const prevPage = (e) => {
     setDocumentPages([]);
     setCurrentPage(0);
     setDocumentTitle('');
-
+    removeMedia();
   };
+
+ 
 
   const handleSeeMore = () => {
     setShowFullText(true);
@@ -867,146 +869,134 @@ const prevPage = (e) => {
             <h2 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-[#e8e6e3]' : 'text-gray-900'}`}>Post Content</h2>
             
             <div className="space-y-4">
-              <div className={`flex items-center justify-between p-3 rounded-lg border ${
-                darkMode ? 'bg-[#38434f] border-[#545d69]' : 'bg-gray-50 border-gray-200'
-              }`}>
-                <div className="flex-1">
-                  <label className={`text-sm font-semibold cursor-pointer ${
-                    darkMode ? 'text-[#e8e6e3]' : 'text-gray-900'
-                  }`} htmlFor="use-profile-toggle">
-                    Use My Profile
-                  </label>
-                  <p className={`text-xs mt-0.5 ${darkMode ? 'text-[#b4b2ab]' : 'text-gray-600'}`}>
-                    {useProfile ? 'Using your custom profile' : 'Using ColdIQ default profile'}
-                  </p>
-                </div>
-                <button
-                  id="use-profile-toggle"
-                  onClick={() => setUseProfile(!useProfile)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    useProfile ? 'bg-blue-600' : 'bg-gray-300'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      useProfile ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {useProfile && (
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className={`block text-xs font-medium mb-1.5 ${
-                      darkMode ? 'text-[#b4b2ab]' : 'text-gray-700'
-                    }`}>
-                      Name
-                    </label>
-                    <input
-                      type="text"
-                      value={authorName}
-                      onChange={(e) => setAuthorName(e.target.value)}
-                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        darkMode 
-                          ? 'bg-[#38434f] border-[#545d69] text-[#e8e6e3] placeholder-[#7a7a7a]' 
-                          : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                      placeholder="Your Name"
-                    />
-                  </div>
-
-                  <div>
-                    <label className={`block text-xs font-medium mb-1.5 ${
-                      darkMode ? 'text-[#b4b2ab]' : 'text-gray-700'
-                    }`}>
-                      Headline
-                    </label>
-                    <input
-                      type="text"
-                      value={authorHeadline}
-                      onChange={(e) => setAuthorHeadline(e.target.value)}
-                      className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        darkMode 
-                          ? 'bg-[#38434f] border-[#545d69] text-[#e8e6e3] placeholder-[#7a7a7a]' 
-                          : 'bg-white border-gray-300 text-gray-900'
-                      }`}
-                      placeholder="Your Company"
-                    />
-                  </div>
-                </div>
-              )}
-
-             {useProfile && (
-  <div>
-    <label className={`block text-xs font-medium mb-3 ${
-      darkMode ? 'text-[#b4b2ab]' : 'text-gray-700'
-    }`}>
-      Profile Photo
+             <div className={`p-3 rounded-lg border ${
+  darkMode ? 'bg-[#1b1f23] border-[#38434f]' : 'bg-white border-gray-200'
+}`}>
+  <div className="flex items-center gap-2.5">
+    <button
+      id="use-profile-toggle"
+      onClick={() => setUseProfile(!useProfile)}
+      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${
+        useProfile ? 'bg-blue-600' : darkMode ? 'bg-[#545d69]' : 'bg-gray-300'
+      }`}
+    >
+      <span
+        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
+          useProfile ? 'translate-x-5' : 'translate-x-0.5'
+        }`}
+      />
+    </button>
+    
+    <label 
+      htmlFor="use-profile-toggle"
+      className={`text-sm cursor-pointer ${
+        darkMode ? 'text-[#b4b2ab]' : 'text-gray-600'
+      }`}
+    >
+      Use your profile
     </label>
-    
-    <input
-      ref={profilePhotoInputRef}
-      type="file"
-      accept="image/*"
-      onChange={handleProfilePhotoUpload}
-      className="hidden"
-    />
-    
-    <div className={`flex items-center gap-4 p-4 rounded-lg border ${
-      darkMode ? 'bg-[#38434f] border-[#545d69]' : 'bg-gray-50 border-gray-200'
-    }`}>
-      {customProfilePhoto ? (
-        <>
-          <img 
-            src={customProfilePhoto} 
-            alt="Profile" 
-            className={`w-20 h-20 rounded-full object-cover border-2 flex-shrink-0 ${
-              darkMode ? 'border-[#545d69]' : 'border-gray-300'
-            }`} 
+  </div>
+
+  {useProfile && (
+    <div className="mt-3 space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className={`block text-xs font-medium mb-1.5 ${
+            darkMode ? 'text-[#b4b2ab]' : 'text-gray-700'
+          }`}>
+            Name
+          </label>
+          <input
+            type="text"
+            value={authorName}
+            onChange={(e) => setAuthorName(e.target.value)}
+            className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg focus:shadow-blue-500/20 transition-shadow ${
+  darkMode 
+    ? 'bg-[#38434f] border-[#545d69] text-[#e8e6e3] placeholder-[#7a7a7a]' 
+    : 'bg-gray-50 border-gray-300 text-gray-900'
+}`}
+            placeholder="Your Name"
           />
-          <div className="flex-1 flex flex-col gap-2">
-            <button
-              onClick={() => profilePhotoInputRef.current?.click()}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                darkMode
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
-            >
-              Change Photo
-            </button>
-            <button
-              onClick={() => setCustomProfilePhoto('')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                darkMode
-                  ? 'bg-red-600/10 text-red-400 hover:bg-red-600/20'
-                  : 'bg-red-50 text-red-600 hover:bg-red-100'
-              }`}
-            >
-              Remove Photo
-            </button>
-          </div>
-        </>
-      ) : (
+        </div>
+
+        <div>
+          <label className={`block text-xs font-medium mb-1.5 ${
+            darkMode ? 'text-[#b4b2ab]' : 'text-gray-700'
+          }`}>
+            Headline
+          </label>
+          <input
+            type="text"
+            value={authorHeadline}
+            onChange={(e) => setAuthorHeadline(e.target.value)}
+            className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg focus:shadow-blue-500/20 transition-shadow ${
+  darkMode 
+    ? 'bg-[#38434f] border-[#545d69] text-[#e8e6e3] placeholder-[#7a7a7a]' 
+    : 'bg-gray-50 border-gray-300 text-gray-900'
+}`}
+            placeholder="Your Headline"
+          />
+        </div>
+      </div>
+
+      <div>
+  <label className={`block text-xs font-medium mb-1.5 ${
+    darkMode ? 'text-[#b4b2ab]' : 'text-gray-700'
+  }`}>
+    Profile Photo
+  </label>
+  
+  <input
+    ref={profilePhotoInputRef}
+    type="file"
+    accept="image/*"
+    onChange={handleProfilePhotoUpload}
+    className="hidden"
+  />
+  
+  <div className="flex items-center gap-3 w-full">
+    <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center flex-shrink-0">
+  <img 
+    src={getDisplayPhoto()} 
+    alt="Profile" 
+    className="w-full h-full object-cover"
+    style={getDisplayPhoto() === GENERIC_AVATAR ? { transform: 'scale(1.3)' } : {}}
+    onError={(e) => {
+      e.target.style.display = 'none';
+      e.target.parentElement.innerHTML = `<span class="text-white font-semibold text-lg">${getDisplayName().charAt(0).toUpperCase()}</span>`;
+    }}
+  />
+</div>
+    
+    <div className="flex gap-2 flex-1">
+      <button
+        onClick={() => profilePhotoInputRef.current?.click()}
+        className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          darkMode
+            ? 'bg-blue-600 text-white hover:bg-blue-700'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
+        }`}
+      >
+        {customProfilePhoto ? 'Change Photo' : 'Upload Photo'}
+      </button>
+      {customProfilePhoto && (
         <button
-          onClick={() => profilePhotoInputRef.current?.click()}
-          className={`w-full px-4 py-8 border-2 border-dashed rounded-lg text-sm transition-colors flex flex-col items-center justify-center gap-2 ${
+          onClick={() => setCustomProfilePhoto('')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             darkMode
-              ? 'border-[#545d69] text-[#b4b2ab] hover:border-blue-500 hover:text-blue-400 hover:bg-[#1b1f23]'
-              : 'border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600 hover:bg-white'
+              ? 'bg-red-600/10 text-red-400 hover:bg-red-600/20'
+              : 'bg-red-50 text-red-600 hover:bg-red-100'
           }`}
         >
-          <Upload size={24} />
-          <span className="font-medium">Upload Profile Photo</span>
-          <span className={`text-xs ${darkMode ? 'text-[#7a7a7a]' : 'text-gray-500'}`}>
-            Click to select an image
-          </span>
+          Remove
         </button>
       )}
     </div>
   </div>
-)}
+</div>
+    </div>
+  )}
+</div>
 
               <div>
                 <div className="flex items-center justify-between mb-1.5">
@@ -1016,20 +1006,22 @@ const prevPage = (e) => {
                     Post Text
                   </label>
                   <div className="flex gap-2">
-                    <button
-                      onClick={loadSamplePost}
-                      className={`text-xs font-medium ${
-                        darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
-                      }`}
-                    >
-                      Load Sample
-                    </button>
+                    {!postText && (
+                      <button
+                        onClick={loadSamplePost}
+                        className={`text-xs font-medium ${
+                          darkMode ? 'text-[#9a989f] hover:text-[#b4b2ab]' : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        Load Sample
+                      </button>
+                    )}
                     {postText && (
                       <>
                         <button
                           onClick={applyAutoSpacing}
                           className={`text-xs font-medium ${
-                            darkMode ? 'text-green-400 hover:text-green-300' : 'text-green-600 hover:text-green-700'
+                            darkMode ? 'text-[#9a989f] hover:text-[#b4b2ab]' : 'text-gray-500 hover:text-gray-700'
                           }`}
                         >
                           Auto-Space
@@ -1037,7 +1029,7 @@ const prevPage = (e) => {
                         <button
                           onClick={clearPost}
                           className={`text-xs font-medium ${
-                            darkMode ? 'text-[#9a989f] hover:text-[#b4b2ab]' : 'text-gray-500 hover:text-gray-700'
+                            darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
                           }`}
                         >
                           Clear
@@ -1111,9 +1103,15 @@ const prevPage = (e) => {
                   </div>
 
                   {/* Character Count */}
-                  <div className={`text-xs ${darkMode ? 'text-[#9a989f]' : 'text-gray-500'}`}>
-                    {charCount.toLocaleString()} / 3,000 characters • {lineCount} {lineCount === 1 ? 'line' : 'lines'}
-                  </div>
+<div className={`text-xs font-medium ${
+  charCount > 3000 
+    ? 'text-red-600' 
+    : charCount >= 2700 
+    ? 'text-yellow-600' 
+    : 'text-green-600'
+}`}>
+  {charCount.toLocaleString()} / 3,000 characters • {lineCount} {lineCount === 1 ? 'line' : 'lines'}
+</div>
                 </div>
 
                 {/* Hidden file inputs */}
@@ -1202,14 +1200,14 @@ const prevPage = (e) => {
               
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setDarkMode(!darkMode)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    darkMode 
-                      ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                  title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-                >
+  onClick={() => setDarkMode(!darkMode)}
+  className={`p-1.5 rounded-md transition-colors ${
+    darkMode 
+      ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' 
+      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+  }`}
+  title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+>
                   {darkMode ? (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12 18a6 6 0 110-12 6 6 0 010 12zm0-2a4 4 0 100-8 4 4 0 000 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.515 4.929l1.414-1.414L7.05 5.636 5.636 7.05 3.515 4.93zM16.95 18.364l1.414-1.414 2.121 2.121-1.414 1.414-2.121-2.121zm2.121-14.85l1.414 1.415-2.121 2.121-1.414-1.414 2.121-2.121zM5.636 16.95l1.414 1.414-2.121 2.121-1.414-1.414 2.121-2.121zM23 11v2h-3v-2h3zM4 11v2H1v-2h3z"/>
