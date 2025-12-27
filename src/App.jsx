@@ -1078,8 +1078,14 @@ const prevPage = (e) => {
                     <button
                       onClick={() => handleMediaTypeSelect('image')}
                       disabled={mediaType && mediaType !== 'image'}
-                      className={`p-2 rounded hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                        mediaType === 'image' ? 'bg-blue-50 text-blue-600' : darkMode ? 'text-[#b4b2ab]' : 'text-gray-600'
+                      className={`p-2 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                        mediaType === 'image' 
+                          ? darkMode 
+                            ? 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/30' 
+                            : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                          : darkMode 
+                            ? 'text-[#b4b2ab] hover:bg-[#38434f]' 
+                            : 'text-gray-600 hover:bg-gray-100'
                       }`}
                       title="Add images"
                     >
@@ -1094,8 +1100,14 @@ const prevPage = (e) => {
                     <button
                       onClick={() => handleMediaTypeSelect('document')}
                       disabled={mediaType && mediaType !== 'document'}
-                      className={`p-2 rounded hover:bg-gray-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                        mediaType === 'document' ? 'bg-blue-50 text-blue-600' : darkMode ? 'text-[#b4b2ab]' : 'text-gray-600'
+                      className={`p-2 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                        mediaType === 'document' 
+                          ? darkMode 
+                            ? 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/30' 
+                            : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                          : darkMode 
+                            ? 'text-[#b4b2ab] hover:bg-[#38434f]' 
+                            : 'text-gray-600 hover:bg-gray-100'
                       }`}
                       title="Add document"
                     >
@@ -1154,7 +1166,7 @@ const prevPage = (e) => {
                 
 
                 {mediaType === 'document' && uploadedDocument && (
-                  <div className={`p-3 rounded-lg border ${
+                  <div className={`mt-3 p-3 rounded-lg border ${
                     darkMode ? 'border-[#545d69] bg-[#38434f]' : 'border-gray-200 bg-gray-50'
                   }`}>
                     <div className="flex items-center justify-between mb-2">
