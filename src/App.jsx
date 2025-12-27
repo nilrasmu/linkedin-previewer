@@ -219,7 +219,15 @@ What's been your experience with post length?`;
   };
 
   const handleMediaTypeSelect = (type) => {
-    if (mediaType === type) return;
+    // If same type and already has content, trigger file input to replace
+    if (mediaType === type) {
+      if (type === 'image') {
+        fileInputRef.current?.click();
+      } else if (type === 'document') {
+        documentInputRef.current?.click();
+      }
+      return;
+    }
     
     // Clear previous media
     setUploadedImages([]);
@@ -264,6 +272,14 @@ What's been your experience with post length?`;
     setDocumentPages([]);
     setCurrentPage(0);
     setDocumentTitle('');
+    
+    // Clear file input values to allow re-uploading the same file
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    if (documentInputRef.current) {
+      documentInputRef.current.value = '';
+    }
   };
 
 const nextPage = (e) => {
@@ -667,7 +683,7 @@ const prevPage = (e) => {
     const config = DEVICE_CONFIG[viewMode];
     const maxHeight = config.maxHeight;
     
-    if (!postText) {
+    if (!postText && !mediaType) {
       return <span className={`italic ${darkMode ? 'text-[#7a7a7a]' : 'text-gray-400'}`}>Start typing to see your post preview...</span>;
     }
 
@@ -708,13 +724,15 @@ const prevPage = (e) => {
         )}
 
         {mediaType === 'image' && uploadedImages.length > 0 && (
-          <div className="mt-3">
+          <div className={postText ? "mt-3" : ""}>
             <ImageGrid />
           </div>
         )}
         
         {mediaType === 'document' && (
-          <DocumentCarousel />
+          <div className={postText ? "" : "-mt-3"}>
+            <DocumentCarousel />
+          </div>
         )}
         
 
